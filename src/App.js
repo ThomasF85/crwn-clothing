@@ -8,6 +8,7 @@ import ShopPage from "./pages/shop/shop.component";
 import Header from "./components/header/header.component";
 import SignInAndSignUpPage from "./components/signin-singup/signin-signup.component";
 import { setUpOnAuthorizationChangeHandler } from './firebase/firebase.utils';
+import CheckoutPage from "./pages/checkout/checkout.component";
 
 class App extends React.Component {
     unsubscribeFromAuthorizationChange = null;
@@ -36,6 +37,7 @@ class App extends React.Component {
                             (<Redirect to='/' />) :
                             (<SignInAndSignUpPage />)
                     }/>
+                    <Route exact path='/checkout' component={CheckoutPage} />
                 </Switch>
             </div>
         );
