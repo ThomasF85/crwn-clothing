@@ -2,7 +2,7 @@ import React from 'react';
 
 import './sign-up.styles.scss';
 
-import {auth, saveUserIfNeededAndReturnRef, createUserWithEmailAndPassword} from "../../firebase/firebase.utils";
+import { createUserWithEmailAndPassword } from "../../firebase/firebase.utils";
 import FormInput from "../form-input/form-input.component";
 import CustomButton from "../custom-button/custom-button.component";
 
@@ -29,9 +29,8 @@ class SignUp extends React.Component {
         }
 
         try {
-            const {user} = await createUserWithEmailAndPassword(auth, email, password);
+            await createUserWithEmailAndPassword(email, password, displayName);
 
-            await saveUserIfNeededAndReturnRef(user, { displayName });
             this.setState({
                 displayName: '',
                 email: '',
@@ -39,7 +38,7 @@ class SignUp extends React.Component {
                 confirmPassword: ''
             });
         } catch (error) {
-            console.error(error);
+            console.error('error signing up user: ', error.message);
         }
     }
 

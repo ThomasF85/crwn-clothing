@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword as createUser } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword as createUser, signInWithEmailAndPassword as signin } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot as firebaseOnSnapShot} from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -15,7 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
-export const saveUserIfNeededAndReturnRef = async (userAuth, additionalData) => {
+const saveUserIfNeededAndReturnRef = async (userAuth, additionalData) => {
     if (!userAuth) {
         return;
     }
@@ -39,18 +39,35 @@ export const saveUserIfNeededAndReturnRef = async (userAuth, additionalData) => 
     return userRef;
 }
 
-
-
-
 const provider = new GoogleAuthProvider();
-export const auth = getAuth();
+const auth = getAuth();
 
 provider.setCustomParameters({ prompt: 'select_account' });
-export const signInWithGoogle = () => signInWithPopup(auth, provider).then((result) => {
-    //
-}).catch((error) => {
-    //
-});
+export const signInWithGoogle = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch(error) {
+        console.log('error signing in with google:', error.message);
+    }
+}
 
-export const onSnapshot = firebaseOnSnapShot;
-export const createUserWithEmailAndPassword = createUser;
+export const signInWithEmailAndPassword = async (email, password) => signin(auth, email, password);
+
+export const createUserWithEmailAndPassword = async (email, password, displayName) => {
+    const {user} = await createUser(auth, email, password);
+    await saveUserIfNeededAndReturnRef(user, { displayName });
+}
+
+export const setUpOnAuthorizationChangeHandler = ( userDataCallback ) => {
+    return auth.onAuthStateChanged(async userAuth => {
+        if (userAuth) {
+            const userRef = await saveUserIfNeededAndReturnRef(userAuth);
+
+            const unsub = firebaseOnSnapShot(userRef, (doc) => userDataCallback({id: doc.id, ...doc.data()}));
+        } else {
+            userDataCallback(null);
+        }
+    });
+}
+
+export const signOut = () => auth.signOut();
