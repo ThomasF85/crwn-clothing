@@ -6,6 +6,9 @@ import {createSelector} from "reselect";
 import CollectionItem from "../../components/collection-item/collection-item.component";
 
 const CollectionPage = ({collection}) => {
+    if (!collection) {
+        return <div>URL not found</div>
+    }
     const {title, items} = collection;
     return (
         <div className='collection-page'>

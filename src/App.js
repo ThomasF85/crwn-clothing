@@ -7,8 +7,9 @@ import HomePage from "./pages/homepage/homepage.component";
 import ShopPage from "./pages/shop/shop.component";
 import Header from "./components/header/header.component";
 import SignInAndSignUpPage from "./components/signin-singup/signin-signup.component";
-import { setUpOnAuthorizationChangeHandler } from './firebase/firebase.utils';
+import {addCollectionAndItems, setUpOnAuthorizationChangeHandler} from './firebase/firebase.utils';
 import CheckoutPage from "./pages/checkout/checkout.component";
+import {INITIAL_STATE} from "./redux/shop/shop.utils";
 
 class App extends React.Component {
     unsubscribeFromAuthorizationChange = null;

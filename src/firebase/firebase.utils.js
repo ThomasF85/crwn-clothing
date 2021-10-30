@@ -1,6 +1,12 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword as createUser, signInWithEmailAndPassword as signin } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot as firebaseOnSnapShot} from "firebase/firestore";
+import {initializeApp} from "firebase/app";
+import {
+    getAuth,
+    signInWithPopup,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword as createUser,
+    signInWithEmailAndPassword as signin
+} from "firebase/auth";
+import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, writeBatch} from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,7 +31,7 @@ const saveUserIfNeededAndReturnRef = async (userAuth, additionalData) => {
     const snapShot = await getDoc(userRef);
 
     if (!snapShot.exists()) {
-        const { displayName, email } = userAuth;
+        const {displayName, email} = userAuth;
         const createdAt = new Date();
         try {
             await setDoc(userRef, {
@@ -42,11 +48,23 @@ const saveUserIfNeededAndReturnRef = async (userAuth, additionalData) => {
 const provider = new GoogleAuthProvider();
 const auth = getAuth();
 
-provider.setCustomParameters({ prompt: 'select_account' });
+provider.setCustomParameters({prompt: 'select_account'});
+
+export const addCollectionAndItems = async (collectionKey, jsonToAdd) => {
+    const batch = writeBatch(db);
+
+    Object.keys(jsonToAdd).forEach(key => {
+        const newDocRef = doc(db, collectionKey, key);
+        batch.set(newDocRef, jsonToAdd[key]);
+    })
+
+    return await batch.commit();
+}
+
 export const signInWithGoogle = async () => {
     try {
         await signInWithPopup(auth, provider);
-    } catch(error) {
+    } catch (error) {
         console.log('error signing in with google:', error.message);
     }
 }
@@ -55,19 +73,32 @@ export const signInWithEmailAndPassword = async (email, password) => signin(auth
 
 export const createUserWithEmailAndPassword = async (email, password, displayName) => {
     const {user} = await createUser(auth, email, password);
-    await saveUserIfNeededAndReturnRef(user, { displayName });
+    await saveUserIfNeededAndReturnRef(user, {displayName});
 }
 
-export const setUpOnAuthorizationChangeHandler = ( userDataCallback ) => {
+export const setUpOnAuthorizationChangeHandler = (userDataCallback) => {
     return auth.onAuthStateChanged(async userAuth => {
         if (userAuth) {
             const userRef = await saveUserIfNeededAndReturnRef(userAuth);
 
-            const unsub = firebaseOnSnapShot(userRef, (doc) => userDataCallback({id: doc.id, ...doc.data()}));
+            const unsub = onSnapshot(userRef, (doc) => userDataCallback({id: doc.id, ...doc.data()}));
         } else {
             userDataCallback(null);
         }
     });
+}
+
+export const subscribeToCollections = (collectionsCallback) => {
+    const collectionRef = collection(db, 'collections');
+
+    return onSnapshot(collectionRef, async collections => {
+            const json = {};
+            collections.docs.forEach(doc => {
+                json[doc.id] = {...doc.data()};
+            });
+            collectionsCallback(json);
+        },
+        error => console.log(error));
 }
 
 export const signOut = () => auth.signOut();
