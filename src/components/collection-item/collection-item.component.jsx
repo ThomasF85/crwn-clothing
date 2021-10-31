@@ -4,8 +4,9 @@ import './collection-item.styles.scss';
 import CustomButton from "../custom-button/custom-button.component";
 import {connect} from "react-redux";
 import {addCartItem} from "../../redux/cart/cart.actions";
+import {selectNullUser} from "../../redux/user/user.selectors";
 
-const CollectionItem = ({ item, addItem }) => {
+const CollectionItem = ({ item, addItem, isNullUser }) => {
     const { name, price, imageUrl } = item;
     return (
         <div className='collection-item'>
@@ -19,13 +20,17 @@ const CollectionItem = ({ item, addItem }) => {
                 <span className='name'>{name}</span>
                 <span className='price'>{price}</span>
             </div>
-            <CustomButton onClick={() => addItem(item)} inverted> Add to cart </CustomButton>
+            <CustomButton onClick={() => addItem(item, isNullUser)} inverted> Add to cart </CustomButton>
         </div>
     )
 }
 
 const mapDispatchToProps = dispatch => ({
-    addItem: item => dispatch(addCartItem(item))
+    addItem: (item, nullUser) => dispatch(addCartItem(item, nullUser))
 });
 
-export default connect(null, mapDispatchToProps)(CollectionItem);
+const mapStateToProps = state => ({
+    isNullUser: selectNullUser(state)
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(CollectionItem);

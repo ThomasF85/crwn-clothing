@@ -10,15 +10,25 @@ import SignInAndSignUpPage from "./components/signin-singup/signin-signup.compon
 import {addCollectionAndItems, setUpOnAuthorizationChangeHandler} from './firebase/firebase.utils';
 import CheckoutPage from "./pages/checkout/checkout.component";
 import {INITIAL_STATE} from "./redux/shop/shop.utils";
+import {clearNullUserCart, populateCartFromNullUserCart} from "./redux/cart/cart.actions";
 
 class App extends React.Component {
     unsubscribeFromAuthorizationChange = null;
 
     componentDidMount() {
-        const { setCurrentUser } = this.props;
+        const { setCurrentUser, clearNullUserCart, populateCartFromNullUserCart } = this.props;
 
         this.unsubscribeFromAuthorizationChange = setUpOnAuthorizationChangeHandler(
-            newUser => setCurrentUser(newUser)
+            newUser => {
+                if (newUser) {
+                    setCurrentUser(newUser);
+                    clearNullUserCart();
+                    // fetch cart and if not empty, replace with cart in redux store
+                } else {
+                    setCurrentUser(null);
+                    populateCartFromNullUserCart();
+                }
+            }
         );
     }
 
@@ -50,7 +60,9 @@ const mapStateToProps = ({ user }) => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    setCurrentUser: user => dispatch(setCurrentUser(user))
+    setCurrentUser: user => dispatch(setCurrentUser(user)),
+    clearNullUserCart: () => dispatch(clearNullUserCart()),
+    populateCartFromNullUserCart: () => dispatch(populateCartFromNullUserCart())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

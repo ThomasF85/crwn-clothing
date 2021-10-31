@@ -6,17 +6,17 @@ import localStorage from "redux-persist/lib/storage";
 import directoryReducer from "./directory/directory.reducer";
 import shopReducer from "./shop/shop.reducer";
 
-const persistConfig = {
-    key: 'root',
+const cartPersistConfig = {
+    key: 'cart',
     storage: localStorage,
-    whitelist: ['cart']
+    whitelist: ['nullUserCartItems']
 }
 
 const rootReducer = combineReducers({
     user: userReducer,
-    cart: cartReducer,
+    cart: persistReducer(cartPersistConfig, cartReducer),
     directory: directoryReducer,
     shop: shopReducer
 });
 
-export default persistReducer(persistConfig, rootReducer);
+export default rootReducer;
