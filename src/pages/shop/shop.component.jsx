@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Route, Switch} from "react-router-dom";
 import CollectionsOverview from "../../components/collections-overview/collections-overview.component";
 import CollectionPage from "../collection/collection.component";
@@ -10,30 +10,22 @@ import WithSpinner from "../../components/with-spinner/with-spinner.component";
 const CollectionsOverviewWithSpinner = WithSpinner(CollectionsOverview);
 const CollectionPageWithSpinner = WithSpinner(CollectionPage);
 
-class ShopPage extends React.Component {
-    state = {
-        loading: true
-    };
+const ShopPage = ({match, update}) => {
+    const [loading, setLoading] = useState(true);
 
-    unsubscribeFromCollection = null;
-
-    componentDidMount() {
-        const {update} = this.props;
-        this.unsubscribeFromCollection = subscribeToCollections(collections => {
+    useEffect(() => {
+        const unsubscribeFromCollection = subscribeToCollections(collections => {
             update(collections);
-            this.setState({ loading: false });
+            setLoading(false);
         });
-    }
-
-    componentWillUnmount() {
-        if (this.unsubscribeFromCollection) {
-            this.unsubscribeFromCollection();
+        return () => {
+            console.log("UNSUB");
+            if (unsubscribeFromCollection) {
+                unsubscribeFromCollection();
+            }
         }
-    }
+    }, []);
 
-    render() {
-        const {match} = this.props;
-        const {loading} = this.state;
         return (
             <div className='shop-page'>
                 <Switch>
@@ -42,7 +34,6 @@ class ShopPage extends React.Component {
                 </Switch>
             </div>
         )
-    }
 }
 
 const mapDispatchToProps = dispatch => ({
